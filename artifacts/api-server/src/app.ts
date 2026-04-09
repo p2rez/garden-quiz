@@ -1,13 +1,8 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import router from "./routes";
 import { logger } from "./lib/logger";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const app: Express = express();
 
@@ -34,12 +29,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static(join(__dirname, "../public")));
-
 app.use("/api", router);
-
-app.get("/{*splat}", (_req, res) => {
-  res.sendFile(join(__dirname, "../public", "index.html"));
-});
 
 export default app;
