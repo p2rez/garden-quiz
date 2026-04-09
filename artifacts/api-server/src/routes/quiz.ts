@@ -77,32 +77,32 @@ ${answerSummary}
 Respond with ONLY a JSON object (no markdown, no explanation):
 {"color": "ColorName", "reason": "A single warm, personal sentence under 20 words explaining why this color fits them."}`;
 
-    const ANTHROPIC_API_KEY = process.env["ANTHROPIC_API_KEY"];
-    if (!ANTHROPIC_API_KEY) {
-      logger.error("ANTHROPIC_API_KEY is not set");
+    const GEMINI_API_KEY = process.env["GEMINI_API_KEY"];
+    if (!GEMINI_API_KEY) {
+      logger.error("GEMINI_API_KEY is not set");
       res.status(500).json({ error: "Server misconfigured." });
       return;
     }
 
-    const apiRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+    const apiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 200, temperature: 0.7 },
+        }),
       },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 200,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    );
 
     const apiData = (await apiRes.json()) as {
-      content?: Array<{ text?: string }>;
+      candidates?: Array<{
+        content?: { parts?: Array<{ text?: string }> };
+      }>;
     };
     const text =
-      apiData.content?.map((b) => b.text ?? "").join("") ?? "";
+      apiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const clean = text.replace(/```json|```/g, "").trim();
     const { color, reason } = JSON.parse(clean) as {
       color: string;
