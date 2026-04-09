@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>What color are you in my garden?</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fafaf8; color: #1a1a18; min-height: 100vh; }
+  .wrap { max-width: 600px; margin: 0 auto; padding: 2.5rem 1.25rem; }
+  .card { background: #fff; border: 1px solid #e8e6e0; border-radius: 16px; padding: 2rem; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 6px; }
+  .sub { font-size: 15px; color: #6b6b68; line-height: 1.6; margin-bottom: 1.5rem; }
+  input[type="text"], input[type="password"] {
+    width: 100%; padding: 11px 14px; border: 1px solid #ddd; border-radius: 10px;
+    font-size: 15px; margin-bottom: 1rem; outline: none; background: #fafaf8;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: #639922; }
+  .btn-primary {
+    width: 100%; padding: 12px; background: #639922; color: #fff; border: none;
+    border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #507a1a; }
+  .btn-primary:disabled { background: #b5c9a0; cursor: not-allowed; }
+  .btn-outline {
+    padding: 9px 20px; background: transparent; border: 1px solid #ddd;
+    border-radius: 10px; font-size: 14px; cursor: pointer; color: #444; transition: border-color 0.2s;
+  }
+  .btn-outline:hover { border-color: #888; }
+  .progress-bar { height: 4px; background: #eee; border-radius: 2px; margin-bottom: 2rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #639922; border-radius: 2px; transition: width 0.35s ease; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 13px; color: #888; margin-bottom: 8px; }
+  .question-text { font-size: 16px; font-weight: 500; line-height: 1.6; margin-bottom: 1.5rem; }
+  .opt-btn {
+    display: block; width: 100%; text-align: left; padding: 13px 16px; margin-bottom: 10px;
+    background: #f7f6f2; border: 1px solid #e8e6e0; border-radius: 10px; cursor: pointer;
+    font-size: 14px; line-height: 1.5; color: #1a1a18; transition: all 0.15s;
+  }
+  .opt-btn:hover { background: #fff; border-color: #639922; }
+  .opt-letter { font-weight: 600; color: #888; margin-right: 10px; }
+  .spinner { width: 44px; height: 44px; border: 3px solid #e0e0e0; border-top-color: #639922; border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 1.5rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-wrap { text-align: center; padding-top: 5rem; }
+  .result-card { border-radius: 16px; padding: 2rem; margin-bottom: 1rem; }
+  .result-color-name { display: inline-block; padding: 4px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; }
+  .result-plant { font-size: 26px; font-weight: 500; margin-bottom: 4px; }
+  .result-tagline { font-size: 14px; font-style: italic; margin-bottom: 1rem; opacity: 0.85; }
+  .result-desc { font-size: 15px; line-height: 1.75; margin-bottom: 1.25rem; }
+  .plant-match { border-radius: 10px; padding: 12px 16px; border-left: 3px solid; margin-bottom: 1rem; }
+  .plant-match-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+  .plant-match-name { font-size: 14px; font-weight: 500; }
+  .result-reason { font-size: 13px; font-style: italic; opacity: 0.75; margin-top: 0.75rem; }
+  .admin-link { text-align: center; margin-top: 1.5rem; font-size: 12px; color: #aaa; cursor: pointer; }
+  .admin-link:hover { color: #639922; }
+  .error-msg { color: #c0392b; font-size: 13px; margin-bottom: 0.75rem; }
+  .submission-row { background: #fff; border: 1px solid #e8e6e0; border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+  .submission-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; cursor: pointer; }
+  .submission-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .submission-info { margin-left: 12px; }
+  .submission-name { font-size: 15px; font-weight: 500; }
+  .submission-meta { font-size: 12px; color: #888; margin-top: 2px; }
+  .submission-body { padding: 0 16px 16px; border-top: 1px solid #f0ede8; margin-top: 0; }
+  .answer-row { margin-bottom: 10px; }
+  .answer-q { font-size: 12px; color: #888; }
+  .answer-a { font-size: 13px; color: #1a1a18; margin-top: 2px; padding-left: 12px; }
+  .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .notice { font-size: 12px; color: #888; margin-top: 1rem; line-height: 1.6; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const colors = {
+  Green:      { plant:"Foliage", tagline:"The garden doesn't work without you and honestly neither do I.", desc:"You exist in my garden through the freezes, always holding your ground. Holding down the work when the blooms have spent all their energy. No matter the season, the garden always looks alive with you around and that's not a coincidence, that's just what you do.", texasPlant:"Cedar Elm (Ulmus crassifolia)", bg:"#EAF3DE", accent:"#639922", text:"#27500A" },
+  Indigo:     { plant:"My Lobelia", tagline:"My favorite, and I will say it to your face.", desc:"My all time favorite plant lives in this category. My lobelia is constantly blooming, getting bigger, and bringing so much calm to the wild energy of everything around it. Unbothered, consistent and always becoming more.", texasPlant:"Blue Lobelia (Lobelia appendiculata)", bg:"#EEEDFE", accent:"#7F77DD", text:"#3C3489" },
+  Lavender:   { plant:"My Salvia", tagline:"Didn't see you coming but now I can't imagine it without you.", desc:"Give my salvias a little bit of sun and they explode into the biggest burst of color. That's you. When you show up, you show up big. Resilient, constantly blooming, evergreen and always supporting every flower around you while doing it.", texasPlant:"Mealy Blue Sage (Salvia farinacea)", bg:"#F0EFFE", accent:"#AFA9EC", text:"#534AB7" },
+  White:      { plant:"My Yarrow", tagline:"You make everyone around you better and you don't even try that hard.", desc:"You glow even at nighttime. All of my white flowers tower over the others, but what I love most is what they do to the flowers beside them. They encourage everything around them to stretch a little taller. Inspiring, growth-minded, and the kind of presence people are always grateful to be next to.", texasPlant:"Western Yarrow (Achillea millefolium)", bg:"#F5F4F0", accent:"#888780", text:"#444441" },
+  "Baby Pink":{ plant:"My Phlox", tagline:"Somehow you fit everywhere and everyone loves you for it.", desc:"The first color you see when you walk into my garden. From some of my tallest flowers to the ones closest to the ground, pink exists everywhere and that's exactly you. You move through any room, any crowd, any dynamic and just fit. Welcoming, adaptable, and the reason people feel comfortable the moment they arrive.", texasPlant:"Prairie Phlox (Phlox pilosa)", bg:"#FBEAF0", accent:"#D4537E", text:"#72243E" },
+  Coral:      { plant:"My Guara", tagline:"You walk in and literally everything shifts. It's actually crazy.", desc:"Vibrant without trying, magnetic without performing AND the first color people's eyes go to in my garden. There's something about you that makes everyone around you feel like the best version of themselves. You don't have to do anything extra. You just have to show up.", texasPlant:"Whirling Butterflies (Gaura lindheimeri)", bg:"#FAECE7", accent:"#D85A30", text:"#712B13" },
+  Yellow:     { plant:"My African Lily", tagline:"I waited all season for you and you never disappoint. Never.", desc:"My most awaited bloom in the entire garden. I watch for it every season and it never disappoints and neither do you. You turn strangers into friends before the night is even over. Loud in the best way, warm in every way. The party doesn't really start until you decide it does.", texasPlant:"Engelmann's Daisy (Engelmannia peristenia)", bg:"#FAEEDA", accent:"#BA7517", text:"#633806" },
+};
+
+const questions = [
+  { text:"You're in a room full of strangers — how do you make friends?", opts:[{id:"A",text:"I find a quiet corner and wait for someone to come to me"},{id:"B",text:"I stick close to the one person I already know"},{id:"C",text:"I join a small conversation that's already happening"},{id:"D",text:"I introduce myself to everyone and get the party started"}] },
+  { text:"You have a free Saturday with no plans — how does your ideal day look?", opts:[{id:"A",text:"Home, snacks, cozy — absolutely no human contact required"},{id:"B",text:"A slow solo adventure — coffee shop, bookstore, a walk"},{id:"C",text:"A chill hangout with one or two close friends"},{id:"D",text:"I'm already texting the group chat — we're doing something"}] },
+  { text:"You're handed a magic wand — what do you do with it?", opts:[{id:"A",text:"Wish for a private island where no one can bother me"},{id:"B",text:"Wish for the ability to always know the right thing to say"},{id:"C",text:"Wish for the perfect group of people who just get me"},{id:"D",text:"Wish for the ability to make everyone feel welcomed and loved instantly"}] },
+  { text:"A stranger compliments your outfit — what happens next?", opts:[{id:"A",text:"I say thank you and immediately look at my phone"},{id:"B",text:"I smile, say thanks, and hope that's the end of it"},{id:"C",text:"I compliment them back and we have a quick cute moment"},{id:"D",text:"We're now best friends and I know their whole life story"}] },
+  { text:"You wake up and you're famous overnight — what do you do?", opts:[{id:"A",text:"Panic, turn off my phone, and hide under the covers"},{id:"B",text:"Quietly enjoy it from a distance — no interviews please"},{id:"C",text:"Celebrate with my close circle and take it one step at a time"},{id:"D",text:"I'm already planning my first public appearance and loving every second"}] },
+  { text:"What's your role in the friend group?", opts:[{id:"A",text:"The homebody everyone checks on because they love me"},{id:"B",text:"The deep thinker everyone calls for real advice"},{id:"C",text:"The glue that quietly holds everything together"},{id:"D",text:"The social director — I plan everything and know everybody"}] },
+  { text:"You're introduced to your friend's entire friend group — what's your vibe?", opts:[{id:"A",text:"Polite smiles and counting down until I can go home"},{id:"B",text:"Observing first, warming up slowly — I'll get there"},{id:"C",text:"I'm friendly right away but stick to a few good convos"},{id:"D",text:"I came, I vibed, I left with four new phone numbers"}] },
+  { text:"What do your friends come to you for?", opts:[{id:"A",text:"A safe, quiet space to vent without judgment"},{id:"B",text:"Honest, thoughtful advice they can actually trust"},{id:"C",text:"Emotional support and someone who truly listens"},{id:"D",text:"Hype, energy, and the feeling that everything will be okay"}] },
+  { text:"What does a night out with you always guarantee?", opts:[{id:"A",text:"An early exit and a very detailed debrief the next morning"},{id:"B",text:"Good conversation and at least one meaningful moment"},{id:"C",text:"Laughs, realness, and memories with the people I love"},{id:"D",text:"A story worth telling — something always happens"}] },
+  { text:"You have a friend crush on someone — how do you tell them and make it official?", opts:[{id:"A",text:"I admire them from afar and hope they notice me eventually"},{id:"B",text:"I like a few of their posts and hope that sends a message"},{id:"C",text:"I find a low-key reason to hang out — keep it natural"},{id:"D",text:"I walk straight up and say 'I think we should be friends' — manifested"}] },
+];
+
+let state = { screen:"landing", name:"", answers:[], current:0, result:null, adminPass:"", adminUnlocked:false, submissions:[] };
+
+function render() {
+  const app = document.getElementById("app");
+  if (state.screen === "landing") app.innerHTML = landingHTML();
+  else if (state.screen === "quiz") app.innerHTML = quizHTML();
+  else if (state.screen === "loading") app.innerHTML = loadingHTML();
+  else if (state.screen === "result") app.innerHTML = resultHTML();
+  else if (state.screen === "admin") app.innerHTML = adminHTML();
+  bindEvents();
+}
+
+function landingHTML() {
+  return `
+    <h1>What color are you in my garden?</h1>
+    <p class="sub">10 questions. One color. Your Texas native plant match.</p>
+    <div class="card">
+      <label style="font-size:13px;color:#888;display:block;margin-bottom:6px">Your name</label>
+      <input type="text" id="nameInput" placeholder="Enter your name" maxlength="50" value="${state.name}" />
+      <p class="notice">Your name and answers are saved for review by the quiz creator only.</p>
+      <button class="btn-primary" id="startBtn" style="margin-top:1rem" ${!state.name.trim() ? "disabled" : ""}>Start the quiz →</button>
+    </div>
+    <p class="admin-link" id="adminLink">Admin access</p>`;
+}
+
+function quizHTML() {
+  const q = questions[state.current];
+  const pct = Math.round((state.current / questions.length) * 100);
+  return `
+    <div class="progress-label"><span>Question ${state.current+1} of ${questions.length}</span><span>${pct}%</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="card">
+      <p class="question-text">${q.text}</p>
+      ${q.opts.map(o => `<button class="opt-btn" data-opt="${o.id}"><span class="opt-letter">${o.id}.</span>${o.text}</button>`).join("")}
+      ${state.current > 0 ? `<button class="btn-outline" id="backBtn" style="margin-top:4px">← Back</button>` : ""}
+    </div>`;
+}
+
+function loadingHTML() {
+  return `<div class="loading-wrap"><div class="spinner"></div><p style="color:#888;font-size:15px">Finding your garden color…</p></div>`;
+}
+
+function resultHTML() {
+  const { color, reason } = state.result;
+  const c = colors[color] || colors["Coral"];
+  return `
+    <div class="result-card" style="background:${c.bg};border:1px solid ${c.accent}33">
+      <span class="result-color-name" style="background:${c.accent}22;color:${c.text}">${color}</span>
+      <p class="result-plant" style="color:${c.text}">${c.plant}</p>
+      <p class="result-tagline" style="color:${c.accent}">"${c.tagline}"</p>
+      <p class="result-desc" style="color:${c.text}">${c.desc}</p>
+      <div class="plant-match" style="background:#fff4;border-left-color:${c.accent}">
+        <p class="plant-match-label" style="color:${c.text}">Your Texas Native Plant Match</p>
+        <p class="plant-match-name" style="color:${c.text}">${c.texasPlant}</p>
+      </div>
+      ${reason ? `<p class="result-reason" style="color:${c.text}">"${reason}"</p>` : ""}
+    </div>
+    <button class="btn-primary" id="retakeBtn">Take it again</button>`;
+}
+
+function adminHTML() {
+  if (!state.adminUnlocked) return `
+    <div class="card">
+      <h1 style="margin-bottom:0.5rem">Admin access</h1>
+      <p class="sub">Enter your password to view submissions.</p>
+      <input type="password" id="adminPassInput" placeholder="Password" value="${state.adminPass}" />
+      ${state.adminError ? `<p class="error-msg">${state.adminError}</p>` : ""}
+      <div style="display:flex;gap:10px">
+        <button class="btn-primary" id="adminLoginBtn" style="width:auto;padding:10px 24px">Unlock</button>
+        <button class="btn-outline" id="backToLandingBtn">Back</button>
+      </div>
+    </div>`;
+
+  const rows = state.submissions.length === 0
+    ? `<div class="card"><p style="color:#888">No submissions yet.</p></div>`
+    : state.submissions.map((s, i) => {
+        const c = colors[s.color] || colors["Coral"];
+        const isOpen = state.expandedRow === i;
+        const dt = new Date(s.timestamp).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"});
+        return `
+          <div class="submission-row">
+            <div class="submission-header" data-row="${i}">
+              <div style="display:flex;align-items:center">
+                <div class="submission-avatar" style="background:${c.bg};border:2px solid ${c.accent};color:${c.text}">${(s.color||"?")[0]}</div>
+                <div class="submission-info">
+                  <p class="submission-name">${s.name}</p>
+                  <p class="submission-meta">${s.color} · ${c.plant} · ${dt}</p>
+                </div>
+              </div>
+              <span style="color:#bbb;font-size:12px">${isOpen?"▲":"▼"}</span>
+            </div>
+            ${isOpen ? `<div class="submission-body">
+              ${s.reason ? `<p style="font-size:13px;font-style:italic;color:#888;margin-bottom:1rem">"${s.reason}"</p>` : ""}
+              <p style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Answers</p>
+              ${(s.answers||[]).map((a,j)=>`<div class="answer-row"><p class="answer-q">${j+1}. ${a.question}</p><p class="answer-a"><strong>${a.option}.</strong> ${a.text}</p></div>`).join("")}
+            </div>` : ""}
+          </div>`;
+      }).join("");
+
+  return `
+    <div class="admin-header">
+      <h1>Submissions (${state.submissions.length})</h1>
+      <div style="display:flex;gap:10px">
+        <button class="btn-outline" id="refreshBtn">Refresh</button>
+        <button class="btn-outline" id="signOutBtn">Sign out</button>
+      </div>
+    </div>
+    ${rows}`;
+}
+
+function bindEvents() {
+  const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+
+  on("nameInput","input", e => { state.name = e.target.value; const btn = document.getElementById("startBtn"); if(btn) btn.disabled = !state.name.trim(); });
+  on("nameInput","keydown", e => { if(e.key==="Enter" && state.name.trim()) startQuiz(); });
+  on("startBtn","click", startQuiz);
+  on("adminLink","click", () => { state.screen="admin"; render(); });
+  on("backBtn","click", () => { state.current--; render(); });
+  on("retakeBtn","click", () => { state.name=""; state.answers=[]; state.current=0; state.result=null; state.screen="landing"; render(); });
+  on("adminPassInput","input", e => state.adminPass = e.target.value);
+  on("adminPassInput","keydown", e => { if(e.key==="Enter") loginAdmin(); });
+  on("adminLoginBtn","click", loginAdmin);
+  on("backToLandingBtn","click", () => { state.screen="landing"; render(); });
+  on("refreshBtn","click", loadSubmissions);
+  on("signOutBtn","click", () => { state.adminUnlocked=false; state.adminPass=""; state.submissions=[]; state.screen="landing"; render(); });
+
+  document.querySelectorAll(".opt-btn").forEach(btn => {
+    btn.addEventListener("click", () => selectAnswer(btn.dataset.opt));
+  });
+  document.querySelectorAll(".submission-header").forEach(el => {
+    el.addEventListener("click", () => {
+      const i = parseInt(el.dataset.row);
+      state.expandedRow = state.expandedRow === i ? null : i;
+      render();
+    });
+  });
+}
+
+function startQuiz() { if(state.name.trim()) { state.screen="quiz"; state.current=0; state.answers=[]; render(); } }
+
+function selectAnswer(optId) {
+  const q = questions[state.current];
+  state.answers[state.current] = { option: optId, text: q.opts.find(o=>o.id===optId)?.text||"", question: q.text };
+  if (state.current < questions.length - 1) { state.current++; render(); }
+  else submitQuiz();
+}
+
+async function submitQuiz() {
+  state.screen = "loading"; render();
+  try {
+    const res = await fetch("/api/submit", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ name: state.name.trim(), answers: state.answers })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    state.result = { color: data.color, reason: data.reason };
+  } catch(e) {
+    state.result = { color:"Coral", reason:"Something went beautifully wrong — but you're still coral." };
+  }
+  state.screen = "result"; render();
+}
+
+async function loginAdmin() {
+  const res = await fetch("/api/admin/login", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ password: state.adminPass })
+  });
+  const data = await res.json();
+  if (data.success) { state.adminUnlocked=true; state.adminError=""; loadSubmissions(); }
+  else { state.adminError = data.error || "Incorrect password."; render(); }
+}
+
+async function loadSubmissions() {
+  const res = await fetch("/api/admin/submissions", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ password: state.adminPass })
+  });
+  const data = await res.json();
+  state.submissions = data.submissions || [];
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
