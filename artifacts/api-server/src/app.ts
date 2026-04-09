@@ -38,4 +38,8 @@ app.use(express.static(join(__dirname, "../public")));
 
 app.use("/api", router);
 
+app.get("/{*splat}", (_req, res) => {
+  res.sendFile(join(__dirname, "../public", "index.html"));
+});
+
 export default app;
