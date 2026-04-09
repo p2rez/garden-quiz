@@ -6,7 +6,7 @@ import adminRouter from "./admin";
 const router: IRouter = Router();
 
 router.use(healthRouter);
-router.use("/quiz", quizRouter);
+router.use(quizRouter);
 router.use("/admin", adminRouter);
 
 export default router;
