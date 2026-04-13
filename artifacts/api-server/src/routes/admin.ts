@@ -1,18 +1,11 @@
 import { Router, type IRouter } from "express";
-import rateLimit from "express-rate-limit";
 import Database from "@replit/database";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 const db = new Database();
 
-const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: { error: "Too many login attempts. Please try again later." },
-});
-
-router.post("/login", adminLimiter, (req, res) => {
+router.post("/login", (req, res) => {
   const { password } = req.body as { password?: string };
   const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"];
   if (!password || !ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
@@ -22,7 +15,7 @@ router.post("/login", adminLimiter, (req, res) => {
   res.json({ success: true });
 });
 
-router.post("/submissions", adminLimiter, async (req, res) => {
+router.post("/submissions", async (req, res) => {
   const { password } = req.body as { password?: string };
   const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"];
   if (!password || !ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {

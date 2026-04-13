@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function App() {
   return <Quiz />;
@@ -123,6 +123,28 @@ function Quiz() {
     }
   };
 
+  useEffect(() => {
+    const saved = sessionStorage.getItem("adminPass");
+    if (saved) {
+      setAdminPass(saved);
+      fetchSubmissions(saved).then((ok) => {
+        if (ok) { setAdminUnlocked(true); setScreen("admin"); }
+        else sessionStorage.removeItem("adminPass");
+      });
+    }
+  }, []);
+
+  const fetchSubmissions = async (pass: string): Promise<boolean> => {
+    const res = await fetch("/api/admin/submissions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pass }),
+    });
+    const data = await res.json();
+    if (data.submissions) { setSubmissions(data.submissions); return true; }
+    return false;
+  };
+
   const loginAdmin = async () => {
     const res = await fetch("/api/admin/login", {
       method: "POST",
@@ -131,6 +153,7 @@ function Quiz() {
     });
     const data = await res.json();
     if (data.success) {
+      sessionStorage.setItem("adminPass", adminPass);
       setAdminUnlocked(true);
       setAdminError("");
       loadSubmissions(adminPass);
@@ -263,7 +286,7 @@ function Quiz() {
           <h1 style={S.h1}>Submissions ({submissions.length})</h1>
           <div style={{ display: "flex", gap: 10 }}>
             <button style={S.btnOutline} onClick={() => loadSubmissions()}>Refresh</button>
-            <button style={S.btnOutline} onClick={() => { setAdminUnlocked(false); setAdminPass(""); setSubmissions([]); setScreen("landing"); }}>Sign out</button>
+            <button style={S.btnOutline} onClick={() => { sessionStorage.removeItem("adminPass"); setAdminUnlocked(false); setAdminPass(""); setSubmissions([]); setScreen("landing"); }}>Sign out</button>
           </div>
         </div>
         {submissions.length === 0 ? (
