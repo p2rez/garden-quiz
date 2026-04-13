@@ -6,6 +6,16 @@ import { logger } from "../lib/logger";
 const router: IRouter = Router();
 const db = new Database();
 
+const COLOR_ORDER = ["Green", "Indigo", "Lavender", "White", "Baby Pink", "Coral", "Yellow"];
+const SCORE_BREAKS = [14, 18, 22, 26, 30, 34]; // scores <= break map to that color index
+
+function localScore(answers: Array<{ option: string }>): string {
+  const scoreMap: Record<string, number> = { A: 1, B: 2, C: 3, D: 4 };
+  const total = answers.reduce((sum, a) => sum + (scoreMap[a.option] ?? 2), 0);
+  const idx = SCORE_BREAKS.findIndex((b) => total <= b);
+  return COLOR_ORDER[idx === -1 ? COLOR_ORDER.length - 1 : idx];
+}
+
 const quizLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
@@ -77,37 +87,45 @@ ${answerSummary}
 Respond with ONLY a JSON object (no markdown, no explanation):
 {"color": "ColorName", "reason": "A single warm, personal sentence under 20 words explaining why this color fits them."}`;
 
+    let color: string;
+    let reason: string;
+
     const GEMINI_API_KEY = process.env["GEMINI_API_KEY"];
     if (!GEMINI_API_KEY) {
-      logger.error("GEMINI_API_KEY is not set");
-      res.status(500).json({ error: "Server misconfigured." });
-      return;
+      logger.warn("GEMINI_API_KEY is not set, using local scoring");
+      color = localScore(answers as Array<{ option: string }>);
+      reason = "";
+    } else {
+      try {
+        const apiRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { maxOutputTokens: 200, temperature: 0.7 },
+            }),
+          },
+        );
+
+        const apiData = (await apiRes.json()) as {
+          candidates?: Array<{
+            content?: { parts?: Array<{ text?: string }> };
+          }>;
+        };
+        const text =
+          apiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+        const clean = text.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(clean) as { color: string; reason: string };
+        color = parsed.color;
+        reason = parsed.reason;
+      } catch (geminiErr) {
+        logger.error({ geminiErr }, "Gemini API error, falling back to local scoring");
+        color = localScore(answers as Array<{ option: string }>);
+        reason = "";
+      }
     }
-
-    const apiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 200, temperature: 0.7 },
-        }),
-      },
-    );
-
-    const apiData = (await apiRes.json()) as {
-      candidates?: Array<{
-        content?: { parts?: Array<{ text?: string }> };
-      }>;
-    };
-    const text =
-      apiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    const clean = text.replace(/```json|```/g, "").trim();
-    const { color, reason } = JSON.parse(clean) as {
-      color: string;
-      reason: string;
-    };
 
     const entry = {
       id: `submission_${Date.now()}`,

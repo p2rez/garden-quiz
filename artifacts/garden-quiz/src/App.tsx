@@ -89,6 +89,15 @@ function Quiz() {
     setAdminPass(""); setAdminUnlocked(false); setAdminError(""); setSubmissions([]);
   };
 
+  const localScore = (ans: Answer[]): string => {
+    const scoreMap: Record<string, number> = { A: 1, B: 2, C: 3, D: 4 };
+    const colorOrder = ["Green", "Indigo", "Lavender", "White", "Baby Pink", "Coral", "Yellow"];
+    const breaks = [14, 18, 22, 26, 30, 34];
+    const total = ans.reduce((sum, a) => sum + (scoreMap[a.option] ?? 2), 0);
+    const idx = breaks.findIndex((b) => total <= b);
+    return colorOrder[idx === -1 ? colorOrder.length - 1 : idx];
+  };
+
   const selectAnswer = async (optId: string) => {
     const q = QUESTIONS[current];
     const opt = q.opts.find((o) => o.id === optId)!;
@@ -108,7 +117,7 @@ function Quiz() {
         if (data.error) throw new Error(data.error);
         setResult({ color: data.color, reason: data.reason });
       } catch {
-        setResult({ color: "Coral", reason: "Something went beautifully wrong — but you're still coral." });
+        setResult({ color: localScore(newAnswers), reason: "" });
       }
       setScreen("result");
     }
