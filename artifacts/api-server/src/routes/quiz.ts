@@ -136,7 +136,8 @@ Respond with ONLY a JSON object (no markdown, no explanation):
       timestamp: new Date().toISOString(),
     };
 
-    await db.set(entry.id, JSON.stringify(entry));
+    const setResult = await db.set(entry.id, entry);
+    if (!setResult.ok) throw new Error(setResult.error?.message ?? "Database write failed");
 
     res.json({ color, reason });
   } catch (err) {

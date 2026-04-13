@@ -30,12 +30,17 @@ router.post("/submissions", adminLimiter, async (req, res) => {
     return;
   }
   try {
-    const allKeys = await db.list("submission_");
+    const listResult = await db.list("submission_");
+    if (!listResult.ok) throw new Error(listResult.error?.message ?? "Database list failed");
+    const allKeys = listResult.value;
     const entries: unknown[] = [];
     for (const key of allKeys) {
       try {
-        const val = await db.get(key);
-        entries.push(typeof val === "string" ? JSON.parse(val) : val);
+        const getResult = await db.get(key);
+        if (getResult.ok) {
+          const val = getResult.value;
+          entries.push(typeof val === "string" ? JSON.parse(val) : val);
+        }
       } catch (_e) {}
     }
     (entries as Array<{ timestamp: string }>).sort(
