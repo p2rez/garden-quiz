@@ -7,21 +7,21 @@ export default function App() {
 const COLORS: Record<string, { plant: string; tagline: string; desc: string; texasPlant: string; bg: string; accent: string; text: string }> = {
   Green: {
     plant: "Foliage",
-    tagline: "The garden doesn't work without you and honestly neither do I.",
-    desc: "You exist in my garden through the freezes, always holding your ground. Holding down the work when the blooms have spent all their energy. No matter the season, the garden always looks alive with you around and that's not a coincidence, that's just what you do.",
-    texasPlant: "Cedar Elm (Ulmus crassifolia)",
+    tagline: "The part of the garden that lives year round.",
+    desc: "You exist in my garden through the freezes, always holding your ground. Holding down the work when the blooms have spent all their energy. No matter the season, the garden always looks alive with you around and that's not a coincidence, that's just what you do!",
+    texasPlant: "Mexican Bush Sage (Salvia leucantha)",
     bg: "#EAF3DE", accent: "#639922", text: "#27500A",
   },
   Indigo: {
     plant: "My Lobelia",
-    tagline: "My favorite, and I will say it to your face.",
+    tagline: "The quiet favorite, but don't tell my salvias",
     desc: "My all time favorite plant lives in this category. My lobelia is constantly blooming, getting bigger, and bringing so much calm to the wild energy of everything around it. Unbothered, consistent and always becoming more.",
     texasPlant: "Blue Lobelia (Lobelia appendiculata)",
     bg: "#EEEDFE", accent: "#7F77DD", text: "#3C3489",
   },
   Lavender: {
     plant: "My Salvia",
-    tagline: "Didn't see you coming but now I can't imagine it without you.",
+    tagline: "Snuck into my life and now I can't imagine my life without you",
     desc: "Give my salvias a little bit of sun and they explode into the biggest burst of color. That's you. When you show up, you show up big. Resilient, constantly blooming, evergreen and always supporting every flower around you while doing it.",
     texasPlant: "Mealy Blue Sage (Salvia farinacea)",
     bg: "#F0EFFE", accent: "#AFA9EC", text: "#534AB7",
@@ -37,21 +37,21 @@ const COLORS: Record<string, { plant: string; tagline: string; desc: string; tex
     plant: "My Phlox",
     tagline: "Somehow you fit everywhere and everyone loves you for it.",
     desc: "The first color you see when you walk into my garden. From some of my tallest flowers to the ones closest to the ground, pink exists everywhere and that's exactly you. You move through any room, any crowd, any dynamic and just fit. Welcoming, adaptable, and the reason people feel comfortable the moment they arrive.",
-    texasPlant: "Prairie Phlox (Phlox pilosa)",
+    texasPlant: "John Fanick Phlox (Phlox paniculata)",
     bg: "#FBEAF0", accent: "#D4537E", text: "#72243E",
   },
   Coral: {
     plant: "My Guara",
-    tagline: "You walk in and literally everything shifts. It's actually crazy.",
+    tagline: "They don't call you whirling butterflies for nothing.",
     desc: "Vibrant without trying, magnetic without performing AND the first color people's eyes go to in my garden. There's something about you that makes everyone around you feel like the best version of themselves. You don't have to do anything extra. You just have to show up.",
     texasPlant: "Whirling Butterflies (Gaura lindheimeri)",
     bg: "#FAECE7", accent: "#D85A30", text: "#712B13",
   },
   Yellow: {
-    plant: "My African Lily",
+    plant: "My African Iris",
     tagline: "I waited all season for you and you never disappoint. Never.",
     desc: "My most awaited bloom in the entire garden. I watch for it every season and it never disappoints and neither do you. You turn strangers into friends before the night is even over. Loud in the best way, warm in every way. The party doesn't really start until you decide it does.",
-    texasPlant: "Engelmann's Daisy (Engelmannia peristenia)",
+    texasPlant: "African Iris (Dietes bicolor)",
     bg: "#FAEEDA", accent: "#BA7517", text: "#633806",
   },
 };
@@ -162,6 +162,15 @@ function Quiz() {
     }
   };
 
+  const deleteSubmission = async (id: string) => {
+    await fetch("/api/admin/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: adminPass, id }),
+    });
+    setSubmissions((prev: any[]) => prev.filter((s: any) => s.id !== id));
+  };
+
   const loadSubmissions = async (pass?: string) => {
     const res = await fetch("/api/admin/submissions", {
       method: "POST",
@@ -251,6 +260,7 @@ function Quiz() {
           <p style={{ fontSize: 26, fontWeight: 500, color: c.text, marginBottom: 4 }}>{c.plant}</p>
           <p style={{ fontSize: 14, fontStyle: "italic", color: c.accent, marginBottom: "1rem" }}>"{c.tagline}"</p>
           <p style={{ fontSize: 15, lineHeight: 1.75, color: c.text, marginBottom: "1.25rem" }}>{c.desc}</p>
+          <p style={{ fontSize: 15, lineHeight: 1.75, color: c.text, marginBottom: "1.25rem" }}>Your color is inspired by a real bloom from my garden — wear it to the party! Whether that's a full outfit, an accessory, or even just a nail color, make it yours. Need inspo? I'll be texting over a Pinterest board!</p>
           <div style={{ background: "rgba(255,255,255,0.5)", borderLeft: `3px solid ${c.accent}`, borderRadius: 10, padding: "12px 16px", marginBottom: "1rem" }}>
             <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: c.text, opacity: 0.7, marginBottom: 4 }}>Your Texas Native Plant Match</p>
             <p style={{ fontSize: 14, fontWeight: 500, color: c.text }}>{c.texasPlant}</p>
@@ -305,7 +315,13 @@ function Quiz() {
                     <p style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{s.color} · {c.plant} · {dt}</p>
                   </div>
                 </div>
-                <span style={{ color: "#bbb", fontSize: 12 }}>{isOpen ? "▲" : "▼"}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <button
+                    style={{ padding: "4px 10px", fontSize: 12, color: "#c0392b", background: "transparent", border: "1px solid #f5c6c6", borderRadius: 6, cursor: "pointer" }}
+                    onClick={(e: { stopPropagation(): void }) => { e.stopPropagation(); if (confirm(`Delete ${s.name}'s entry?`)) deleteSubmission(s.id); }}
+                  >Delete</button>
+                  <span style={{ color: "#bbb", fontSize: 12 }}>{isOpen ? "▲" : "▼"}</span>
+                </div>
               </div>
               {isOpen && (
                 <div style={{ padding: "0 16px 16px", borderTop: "1px solid #f0ede8" }}>

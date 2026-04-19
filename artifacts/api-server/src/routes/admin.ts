@@ -47,4 +47,25 @@ router.post("/submissions", async (req, res) => {
   }
 });
 
+router.post("/delete", async (req, res) => {
+  const { password, id } = req.body as { password?: string; id?: string };
+  const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"];
+  if (!password || !ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
+  if (!id || typeof id !== "string" || !id.startsWith("submission_")) {
+    res.status(400).json({ error: "Invalid id." });
+    return;
+  }
+  try {
+    const result = await db.delete(id);
+    if (!result.ok) throw new Error(result.error?.message ?? "Database delete failed");
+    res.json({ success: true });
+  } catch (err) {
+    logger.error({ err }, "Delete error");
+    res.status(500).json({ error: "Could not delete submission." });
+  }
+});
+
 export default router;
